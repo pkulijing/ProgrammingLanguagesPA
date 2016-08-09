@@ -4,9 +4,10 @@ fun is_older(d1 : int * int * int, d2 : int * int * int) =
 fun number_in_month(dl : (int * int * int) list, m : int) =
   if null dl
   then 0
-  else if #2 (hd dl) = m
-  then 1 + number_in_month(tl dl, m)
-  else number_in_month(tl dl, m);
+  else
+      if #2 (hd dl) = m
+      then 1 + number_in_month(tl dl, m)
+      else number_in_month(tl dl, m);
 
 fun number_in_months(dl : (int * int * int) list, ml : int list) =
   if null ml
@@ -32,6 +33,7 @@ fun get_nth(sl : string list, n : int) =
   else get_nth(tl sl, n - 1);
 
 val month_names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
 fun date_to_string(d : int * int * int) =
   get_nth(month_names, #2 d) ^ " " ^ Int.toString(#3 d) ^ ", " ^ Int.toString(#1 d);
 
