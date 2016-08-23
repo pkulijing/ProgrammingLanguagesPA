@@ -23,7 +23,7 @@ fun get_substitutions1(lists, s) =
       [] => []
     | alist::res => case all_except_option(s, alist) of
 			NONE => get_substitutions1(res, s)
-		     | SOME ans => ans@get_substitutions1(res, s);
+		      | SOME ans => ans@get_substitutions1(res, s);
 
 (* (c) *)
 fun get_substitutions2(lists, s) =
@@ -105,4 +105,88 @@ fun score(cs, goal) =
 
 (* (g) *)
 fun officiate(cards, moves, goal) =
+  let fun aux(held_cards, cs, ms) =
+	case ms of
+	    [] => score(held_cards, goal)
+	  | (Discard c)::move_res =>  aux(remove_card(held_cards, c, IllegalMove), cs, move_res)
+	  | Draw::move_res => case cs of
+				  [] => score(held_cards, goal)
+				| c::card_res => if(card_value(c) + sum_cards(held_cards) > goal)
+						 then score(c::held_cards, goal)
+						 else aux(c::held_cards, card_res, move_res)
+  in
+      aux([], cards, moves)
+  end;
+
+(* (challenge) *)
+(* (a) *)
+fun count_ace(cards) =
+	case cards of
+	    [] => 0
+	  | (c,r)::res => if r = Ace
+			  then 1 + count_ace(res)
+			  else count_ace(res)
+					
+fun score_challenge(cs, goal) =
+  let val sum = sum_cards(cs)				      
+      fun pre(s) =
+	if s > goal
+	then 3 * (s - goal)
+	else goal - s
+      fun min(i, j) = if i < j then i else j
+      fun minimum_pre(num_aces) = 
+	if num_aces = 0
+	then pre(sum)
+	else min(pre(sum - 10 * num_aces), minimum_pre(num_aces - 1))
+  in
+      
+      if all_same_color(cs) then minimum_pre(count_ace(cs)) div 2 else minimum_pre(count_ace(cs))
+  end;
+
+fun officiate_challenge(cards, moves, goal) =
+  let fun aux(held_cards, cs, ms) =
+	case ms of
+	    [] => score_challenge(held_cards, goal)
+	  | (Discard c)::move_res =>  aux(remove_card(held_cards, c, IllegalMove), cs, move_res)
+	  | Draw::move_res => case cs of
+				  [] => score_challenge(held_cards, goal)
+				| c::card_res => if (card_value(c) + sum_cards(held_cards) - 10 * count_ace(c::held_cards) > goal)
+						 then score_challenge(c::held_cards, goal)
+						 else aux(c::held_cards, card_res, move_res)
+  in
+      aux([], cards, moves)
+  end;
+
+(* (b) *)
+fun careful_player(cards, goal) =
+  let fun find_card(cs, v) =
+	case cs of
+	    [] => NONE
+	  | c::res => if card_value(c) = v
+			  then SOME(c)
+			  else find_card(res, v)
+      fun rev(lst) =
+	let fun rev_aux(lst, acc) =
+	      case lst of
+		  [] => acc
+		| x::xs => rev_aux(xs, x::acc)
+	in
+	    rev_aux(lst, [])
+	end
+      fun aux(held_cards, cur_sum, left_cards, moves) =
+	if cur_sum = goal
+	then rev(moves)
+	else case left_cards of
+		 [] => rev(Draw::moves)
+	       | c::card_res => if cur_sum <= goal - card_value(c)
+				then aux(c::held_cards, cur_sum + card_value(c), card_res, Draw::moves)
+				else case find_card(held_cards, cur_sum + card_value(c) - goal) of
+					 NONE => rev(moves)
+				       | SOME c0 => aux(c::remove_card(held_cards, c0, IllegalMove), goal, card_res, Draw::(Discard c0)::moves)
+  in
+      aux([], 0, cards,[])
+  end;
+      
+	
+  
   
