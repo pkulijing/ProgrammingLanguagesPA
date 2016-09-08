@@ -24,7 +24,8 @@
 (define (stream-for-n-steps s n)
   (if (= n 0)
       null
-      (cons (car (s)) (stream-for-n-steps (cdr (s)) (- n 1)))))
+      (let ([next (s)])
+        (cons (car next) (stream-for-n-steps (cdr next) (- n 1))))))
 ;5
 (define funny-number-stream
   (letrec ([f (lambda (k) (cons (if (= (remainder k 5) 0) (- k) k) (lambda () (f (+ k 1)))))])
@@ -37,7 +38,8 @@
     (lambda () (f 0))))
 ;7
 (define (stream-add-zero s)
-  (lambda () (cons (cons 0 (car (s))) (stream-add-zero (cdr (s))))))
+  (let ([next (s)])
+    (lambda () (cons (cons 0 (car next)) (stream-add-zero (cdr next))))))
 ;8
 (define (cycle-lists xs ys)
   (letrec ([f (lambda (k) (cons (cons (list-nth-mod xs k) (list-nth-mod ys k)) (lambda () (f (+ k 1)))))])
@@ -65,14 +67,14 @@
                 res)))))))
 ;challenge
 (define-syntax while-less
-  (syntax-rules (while-less do)
+  (syntax-rules (do)
     [(while-less e1 do e2)
-     (let ([res1 e1]
-           [res2 e2])
+     (let ([res1 e1])
        (letrec ([loop (lambda ()
-                        (if (< res2 res1)
-                            (begin (set! res2 e2) (loop))
-                            #t))])
+                        (let ([res2 e2])
+                          (if (< res2 res1)
+                              (loop)
+                              #t)))])
          (loop)))]))
 
                                 
