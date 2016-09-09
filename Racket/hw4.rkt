@@ -38,8 +38,9 @@
     (lambda () (f 0))))
 ;7
 (define (stream-add-zero s)
-  (let ([next (s)])
-    (lambda () (cons (cons 0 (car next)) (stream-add-zero (cdr next))))))
+  (lambda ()
+    (let ([next (s)])
+      (cons (cons 0 (car next)) (stream-add-zero (cdr next))))))
 ;8
 (define (cycle-lists xs ys)
   (letrec ([f (lambda (k) (cons (cons (list-nth-mod xs k) (list-nth-mod ys k)) (lambda () (f (+ k 1)))))])
