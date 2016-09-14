@@ -72,15 +72,15 @@
         [(fst? e)
          (let ([p (eval-under-env (fst-e e) env)])
            (if (apair? p)
-               (eval-under-env (apair-e1 p) env)
+               (apair-e1 p)
                (error "fst applied to non-pair")))]
         [(snd? e)
          (let ([p (eval-under-env (snd-e e) env)])
            (if (apair? p)
-               (eval-under-env (apair-e2 p) env)
+               (apair-e2 p)
                (error "snd applied to non-pair")))]
         [(apair? e)
-         e]
+         (apair (eval-under-env (apair-e1 e) env) (eval-under-env (apair-e2 e) env))]
         [(aunit? e)
          e]
         [(isaunit? e)
@@ -112,7 +112,7 @@
 ;; Problem 3
 
 (define (ifaunit e1 e2 e3)
-  (if (aunit? e1) e2 e3))
+  (ifgreater (isaunit e1) (int 0) e2 e3))
 
 (define (mlet* lstlst e2)
   (if (null? lstlst)
@@ -120,18 +120,24 @@
       (mlet (car (car lstlst)) (cdr (car lstlst)) (mlet* (cdr lstlst) e2))))
 
 (define (ifeq e1 e2 e3 e4)
-  (mlet* (cons (cons "_x" e1) (cons "_y" e2))
-         (if (= 0 (- (int-num (var "_x")) (int-num (var "_y"))))
-             e3
-             e4)))
+  (mlet* (list (cons "_x" e1) (cons "_y" e2))
+         (ifgreater (var "_x") (var "_y") e4
+                    (ifgreater (var "_y") (var "_x") e4 e3))))
+         
 
 ;; Problem 4
 
-(define mupl-map "CHANGE")
+(define mupl-map
+  (fun #f "func"
+       (fun "aux" "xs"
+            (ifaunit (var "xs")
+                     (aunit)
+                     (apair (call (var "func") (fst (var "xs"))) (call (var "aux") (snd (var "xs"))))))))
 
-(define mupl-mapAddN 
-  (mlet "map" mupl-map
-        "CHANGE (notice map is now in MUPL scope)"))
+(define mupl-mapAddN
+        (fun #f "i"
+             (call mupl-map (fun #f "j" (add (var "j") (var "i"))))))
+             
 
 ;; Challenge Problem
 
